@@ -7,7 +7,7 @@ this program is a modified version of GSDM[1]. there are two major differences b
 How to use
 1. download whole program;
 2. extract eigen.tar.gz and opencv2.4.11.tar.gz to ./thirdparty/ folder;
-3. compile this program with visual c++ 2015 on windows;
+3. compile this program with visual c++ 2012 on windows;
 4. run run.bat or run2.bat in ./x64/Release/ folder to see the result.
 
 
