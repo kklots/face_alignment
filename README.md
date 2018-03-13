@@ -6,9 +6,9 @@ this program is a modified version of GSDM[1]. there are two major differences b
 
 How to use
 1. download whole program;
-2. extract eigen.tar.gz and opencv2.4.11.tar.gz to ./thirdparty/ folder;
+2. extract eigen.tar.gz and opencv2.4.11.tar.gz to ./thirdparty/  ;
 3. compile this program with visual c++ 2012_x64_release on windows;
-4. run run.bat or run2.bat in ./x64/Release/ folder to see the result.
+4. run run.bat or run2.bat in ./x64/Release/ to see the result.
 
 
 [1] Global Supervised Descent Method (https://www.cv-foundation.org/openaccess/content_cvpr_2015/papers/Xiong_Global_Supervised_Descent_2015_CVPR_paper.pdf)
