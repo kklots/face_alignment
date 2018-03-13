@@ -1,3 +1,5 @@
+/* facial keypoints tracker main function, implemented by Lixuan. */
+/* email: 15829923@qq.com   kklotss@gmail.com */
 #include "tracker.h"
 #include <fstream>
 #include <opencv2/opencv.hpp>
@@ -7,7 +9,7 @@ using namespace cv;
 
 int main(int argc, char **argv)
 {	
-	char detectionmodel[] = "./models/detectionmodel.bin";
+	char detectionmodel[] = "./models/haarcascade_frontalface_default.xml";
 	char trackingmodel[]  = "./models/trackingmodel.bin";
 	tracker::trackerClass mytracker(3,0.3);
 	bool isFailed = mytracker.load_model(detectionmodel,trackingmodel);
@@ -20,7 +22,7 @@ int main(int argc, char **argv)
 		cap.open(0);
 	}else
 	{
-		cap.open(argv[1]);
+		cap.open( argv[1]);
 	}
 
 	cv::Mat frame;

@@ -1,13 +1,24 @@
+/* facial keypoints tracker, implemented by Lixuan. */
+/* email: 15829923@qq.com   kklotss@gmail.com */
+
 #ifndef _TRACKER_
 #define _TRACKER_
 
-#include "Def_type.h"
-#include "joint_face.h"
+#include "Def.h"
+#include "opencv2/objdetect/objdetect.hpp"
 #include "feat.h"
 #include <vector>
+#include <string>
+#include <assert.h>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <float.h>
+#include <time.h>
+#include <stdint.h>
+
 
 using namespace std;
-
 #define MODEL_NUM 3
 
 namespace tracker
@@ -38,32 +49,32 @@ namespace tracker
 	public:
 		trackerClass(int false_count_times,float is_face_threshold);										                                               
 		~trackerClass(){};
-        bool  load_model(const char *detectionmodel, const char *trackingmodel);	  //载入模型
+        bool  load_model(const char *detectionmodel, const char *trackingmodel);	  
 		bool  Track2D(cv::Mat &src, std::vector<float>& face_pts);
 		inline int GetPtsNum(){return _ptsSize;}
 		void GetPose(double* pose);
-		vector<cv::Point3d>       _model_points;                                      //三维空间点   
+		vector<cv::Point3d>       _model_points;                                     
 	private:
 		bool  load_face_detector(const char* cascadePath);
 		int   detect_face(cv::Mat &inputImage);
 		bool  TrackFeats2D(cv::Mat &src,long count,bool &isTrackingSuccess);
-		bool  Desec_Get(cv::Mat inImg, float fx, float fy, float *vDesc);			  //获得指定位置局部描述
-		bool  Desec_GetAll(cv::Mat inImg,int curStage);	                              //获得所有特征
+		bool  Desec_Get(cv::Mat inImg, float fx, float fy, float *vDesc);			 
+		bool  Desec_GetAll(cv::Mat inImg,int curStage);	                              
 	private:
-		detector::Cascade              _fd;                                           //人脸识别器
-		std::vector<Model>        _tmModels[MODEL_NUM];                               //特征模型
-		std::vector<Model>        _tmValModels[MODEL_NUM];                            //人脸验证模型
-		TMat_f                    _tmMeanShp[MODEL_NUM];                              //形状均值
-		cv::Point2f               _tmCenter[MODEL_NUM];                               //中心点
-		uint32_t                  _stage;                                             //迭代次数
-		TVec_f                    _curShape;                                          //当前形状
-		int                       _cur_model_idx;                                     //当前model序号
-		int                       _ptsSize;                                           //点的数量
-		int                       _nDescLen;                                          //特征长度
-		TVec_f                    _tvDescPlusList;                                    //特征向量
-		Desc_feat                 _descHandl;				                          //HOG特征提取器
-		int						  _false_count_times;                                 //允许连续追踪失败的帧总数
-		float                     _is_face_threshold;                                 //判断是否是人脸的分割阈值
+		CascadeClassifier         _fd;                                           
+		std::vector<Model>        _tmModels[MODEL_NUM];                              
+		std::vector<Model>        _tmValModels[MODEL_NUM];                          
+		TMat_f                    _tmMeanShp[MODEL_NUM];                              
+		cv::Point2f               _tmCenter[MODEL_NUM];                              
+		uint32_t                  _stage;                                            
+		TVec_f                    _curShape;                                        
+		int                       _cur_model_idx;                                   
+		int                       _ptsSize;                                          
+		int                       _nDescLen;                                       
+		TVec_f                    _tvDescPlusList;                               
+		Desc_feat                 _descHandl;				                    
+		int						  _false_count_times;                              
+		float                     _is_face_threshold;                              
 		double                    _params[6];
 	};
 	void  show_image(char* name,cv::Mat &image, vector<float>landmarks, cv::Scalar color = cv::Scalar(0, 255, 0));

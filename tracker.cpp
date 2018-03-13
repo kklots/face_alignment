@@ -1,9 +1,12 @@
-#include "tracker.h"
+/* facial keypoints tracker, implemented by Lixuan. */
+/* email: 15829923@qq.com   kklotss@gmail.com */
 
+#include "tracker.h"
 #include "opencv2/video/tracking.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
+#include "opencv2/objdetect/objdetect.hpp"
 #include <iostream>
 #include <ctype.h>
 #include <fstream>
@@ -20,6 +23,26 @@ using namespace std;
 #define STANDARD_SIZE			 200				   	
 #define SAFE_MARGIN              0.5					
 #define SWAP(x, y, type) {type tmp = (x); (x) = (y); (y) = (tmp);}
+
+
+double meanShape_orig[] ={ 59.5461080331063, 59.5411890873946, 60.7993929165438, 62.7531228816816, 67.1523277487184, 73.5685513329084, 81.2628167411345, 90.0743277132089, 100.500000000001, 110.925672286790,
+                        119.737183258861, 127.431448667090, 133.847672251281, 138.246877118319, 140.200607083457, 141.458810912606, 141.453891966894, 72.9229483360205, 77.0201039522573, 82.5955228987765,
+                        88.1880712820285, 93.3235472287383, 107.676452771262, 112.811928717973, 118.404477101223, 123.979896047741, 128.077051663982, 100.500000000000, 100.500000000001, 100.499999999998,
+                        100.500000000000, 93.8653706429933, 96.8914749447876, 100.499999999999, 104.108525055211, 107.134629357005, 79.5005357217613, 82.9856788081820, 87.3835034322718, 91.2878238151058, 
+                        87.3981298356495, 82.9635052163684, 109.712176184894, 113.616496567728, 118.014321191817, 121.499464278238, 118.036494783633, 113.601870164350, 87.3867395516656, 91.9457205627615, 
+                        97.1836120231708, 100.500000000000, 103.816387976828, 109.054279437238, 113.613260448332, 109.065846353987, 104.624247326561, 100.500000000000, 96.3757526734385, 91.9341536460130,
+                        89.0616009881478, 96.7074203704944, 100.500000000001, 104.292579629507, 111.938399011852, 104.339347904911, 100.499999999999, 96.6606520950863, 74.4813549978396, 86.1890576136983,
+                        97.1347997357431, 107.782624064970, 118.684227430827, 128.012164846337, 134.655378313279, 140.033965907380, 142.587622402808, 140.033965907380, 134.655378313283, 128.012164846341,
+                        118.684227430830, 107.782624064971, 97.1347997357424, 86.1890576137004, 74.4813549978384, 63.4653891704527, 59.4634245873913, 58.1983395607553, 59.0550856848756, 61.2341464326320,
+                        61.2341464326324, 59.0550856848750, 58.1983395607567, 59.4634245873922, 63.4653891704533, 72.2597568465983, 79.8399732626563, 87.1990220536614, 94.0111732136542, 99.0404584974407,
+                        100.271954294930, 101.303901752581, 100.271954294928, 99.0404584974401, 72.4860988425414, 70.2296085396905, 70.2267315863026, 73.0541674192529, 74.3749069246374, 74.4031472862132,
+                        73.0541674192526, 70.2267315863018, 70.2296085396912, 72.4860988425423, 74.4031472862143, 74.3749069246379, 113.361543990546, 110.486023182424, 108.760339063567, 109.594647039181,
+                        108.760339063568, 110.486023182422, 113.361543990545, 118.677031475495, 121.349163555304, 121.907327020774, 121.349163555303, 118.677031475495, 113.407518680783, 112.499238357642,
+                        112.644300546986, 112.499238357643, 113.407518680785, 116.068526292278, 116.589282586228, 116.068526292277};
+double center_x_orig = 100.5;
+double center_y_orig = 100.3930;
+double length_orig = 85.3893;
+
 
 namespace tracker {
 
@@ -138,26 +161,6 @@ namespace tracker {
         delete [] bufMat;                                   \
     }
 
-void calc_affine(TVec_f &curShape, TVec_f &meanShape, TMat_f &affMat){
-    int ptsSize = curShape.rows() / 2;
-    TMat_f X(ptsSize * 2, 4);
-	TVec_f tempMS(ptsSize*2,1);
-    for(int i = 0; i < ptsSize; i++){
-        X(i, 0) = curShape[i];
-        X(i, 1) = -curShape[i + ptsSize];
-        X(i, 2) = 1;
-        X(i, 3) = 0;
-		tempMS[i]=meanShape[i];
-        X(i + ptsSize, 0) = curShape[i + ptsSize];
-        X(i + ptsSize, 1) = curShape[i];
-        X(i + ptsSize, 2) = 0;
-        X(i + ptsSize, 3) = 1;
-		tempMS[i+ptsSize]=meanShape[i+ ptsSize];
-    }
-	
-    affMat = X.householderQr().solve(tempMS);
-}
-
 void calc_affine(TVec_f &curShape, TVec_f &meanShape, float &angle, float &scale){
     int ptsSize = curShape.rows() / 2;
     TMat_f X(ptsSize * 2, 4);
@@ -221,66 +224,6 @@ void affine_sample(cv::Mat& src, TVec_f &shape, float angle, float scale, cv::Po
     center.y = x * rot_mat.at<double>(1, 0) + y * rot_mat.at<double>(1, 1) + rot_mat.at<double>(1, 2);
 }
 
-void vertical_mirror(uint8_t *img, int width, int height, int stride){
-    int cx = width / 2;
-
-    for(int y = 0; y < height; y++){
-        for(int x = 0; x < cx; x++)
-            SWAP(img[x], img[width - 1 - x], uint8_t);
-
-        img += stride;
-    }
-}
-void vertical_mirror(TVec_f &shape, int width){
-    int ptsSize = shape.size() / 2;
-    for(int i = 0; i < ptsSize; i++){
-        shape[i] = width - 1 - shape[i];
-    }
-    for(int i = 0; i < 8; i++){
-        SWAP(shape[i], shape[16 - i], float);
-        SWAP(shape[i + ptsSize], shape[16 - i + ptsSize], float);
-    }
-
-    for(int i = 0; i < 5; i++){
-        SWAP(shape[17 + i], shape[26 - i], float);
-        SWAP(shape[17 + i + ptsSize], shape[26 - i + ptsSize], float);
-    }
-
-    for(int i = 0; i < 4; i++){
-        SWAP(shape[36 + i], shape[45 - i], float);
-        SWAP(shape[36 + i + ptsSize], shape[45 - i + ptsSize], float);
-    }
-
-    SWAP(shape[40], shape[47], float);
-    SWAP(shape[40 + ptsSize], shape[47 + ptsSize], float);
-
-    SWAP(shape[41], shape[46], float);
-    SWAP(shape[41 + ptsSize], shape[46 + ptsSize], float);
-
-    SWAP(shape[31], shape[35], float);
-    SWAP(shape[31 + ptsSize], shape[35 + ptsSize], float);
-
-    SWAP(shape[32], shape[34], float);
-    SWAP(shape[32 + ptsSize], shape[34 + ptsSize], float);
-
-    for(int i = 0; i < 3; i++){
-        SWAP(shape[48 + i], shape[54 - i], float);
-        SWAP(shape[48 + i + ptsSize], shape[54 - i + ptsSize], float);
-    }
-
-    for(int i = 0; i < 2; i++){
-        SWAP(shape[55 + i], shape[59 - i], float);
-        SWAP(shape[55 + i + ptsSize], shape[59 - i + ptsSize], float);
-
-        SWAP(shape[60 + i], shape[64 - i], float);
-        SWAP(shape[60 + i + ptsSize], shape[64 - i + ptsSize], float);
-    }
-
-    SWAP(shape[65], shape[67], float);
-    SWAP(shape[65 + ptsSize], shape[67 + ptsSize], float);
-
-}
-
 void show_image(char* name,cv::Mat &image, vector<float>landmarks,cv::Scalar color){
     int lsize = landmarks.size() / 2;
     for(int i = 0; i < lsize; i++){
@@ -329,15 +272,15 @@ void show_image(char* name,cv::Mat &image, vector<float>landmarks,cv::Scalar col
     cv::imshow(name, image);
 }
 
-Mat norm_0_255(const Mat& src) {
+Mat norm_25_255(const Mat& src) {
     // Create and return normalized image:
     Mat dst;
     switch(src.channels()) {
     case 1:
-        cv::normalize(src, dst, 50, 255, NORM_MINMAX, CV_8UC1);
+        cv::normalize(src, dst, 25, 255, NORM_MINMAX, CV_8UC1);
         break;
     case 3:
-        cv::normalize(src, dst, 50, 255, NORM_MINMAX, CV_8UC3);
+        cv::normalize(src, dst, 25, 255, NORM_MINMAX, CV_8UC3);
         break;
     default:
         src.copyTo(dst);
@@ -469,45 +412,38 @@ bool trackerClass::load_model(const char *detectionmodel, const char *trackingmo
 
 bool trackerClass::load_face_detector(const char* cascadePath)
 {
-    if(_fd.load(cascadePath)){
+    if(!_fd.load(cascadePath)){
         cout << "Error loading face detection model." << endl;
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
 }
 
-int  trackerClass::detect_face(cv::Mat &img)
+int  trackerClass::detect_face(cv::Mat &gray)
 {
-    std::vector<detector::Rect> rects;
-    std::vector<detector::Shape> shapes;
-    int fsize = 0;
-	Mat gray;
-	if(img.channels()==3)
-	{
-		cvtColor(img,gray,CV_BGR2GRAY);
-	}else
-	{
-		gray=img;
-	}
-    _fd.detect(gray.data, gray.cols, gray.rows, gray.step, rects, shapes);
-    fsize = rects.size();
-
-    if(fsize > 0)
+	std::vector<Rect> faces;
+	int fsize = 0;
+	equalizeHist( gray, gray );
+	_fd.detectMultiScale(gray, faces, 1.3, 3, 0|CV_HAAR_SCALE_IMAGE, Size(100,100));
+    fsize = faces.size();
+	if(fsize > 0)
     {
         int maxWidth=0;
         int idx;
 
         for(int i = 0; i < fsize; i++){
-            if(maxWidth < rects[i].width){
-                maxWidth = rects[i].width;
+            if(maxWidth < faces[i].width){
+                maxWidth = faces[i].width;
                 idx=i;
             }
         }
-		for(int i = 0; i < _ptsSize; i++){
-			_curShape[i] = shapes[idx][i].x;
-			_curShape[i + _ptsSize] = shapes[idx][i].y;
+		double center_x =  (faces[idx].x + faces[idx].x + faces[idx].width-1)/2;
+		double center_y =  (faces[idx].y + faces[idx].y + faces[idx].height-1)/2;
+		double length = maxWidth*0.8;
+		for(int i = 0; i < 68; i++){
+			_curShape[i] = center_x + (meanShape_orig[i]-center_x_orig)*length/length_orig;
+            _curShape[i + 68] = center_y + (meanShape_orig[i+68]-center_y_orig)*length/length_orig;
 		}
-
 	}
 
     return (fsize > 0);
@@ -632,6 +568,7 @@ bool trackerClass::TrackFeats2D(cv::Mat &src,long count,bool &isTrackingSuccess)
 	vector <Mat> imgs;
 	imgs.resize(3);
 	imgs[2]=src.clone();
+	norm_25_255(imgs[2]);
 	cv::pyrDown(src,imgs[1]);
 	cv::pyrDown(imgs[1],imgs[0]);
 	int imgIdx = 0;

@@ -1,3 +1,5 @@
+/* Hog-like feature, implemented by Lixuan. */
+/* email: 15829923@qq.com   kklotss@gmail.com */
 
 #ifndef FEAT_H
 #define FEAT_H
