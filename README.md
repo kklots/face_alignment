@@ -1,5 +1,8 @@
 # face_alignment
-A tool for face alignment
+
+2018.5.31: updated the trainning scripts.
+
+a implement of face alignment.
 
 this program is a modified version of GSDM[1]. there are two major differences between this program and GSDM. First, the training samples in this program are divided into multiple subsets based on the head yaw angle, while the samples in GSDM are divided by the feature extracting from images. Second, the feature used in this program is hog-like while the feature used in GSDM is sift-like.
 
