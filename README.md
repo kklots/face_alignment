@@ -1,6 +1,6 @@
 # face_alignment
 
-2018.5.31: updated the trainning scripts.
+2018.5.31: update the trainning scripts.
 
 a implement of face alignment.
 
