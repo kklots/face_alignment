@@ -10,6 +10,6 @@ How to use the training scripts:
 
 5. run trainScript.m to train model.
 
-6. run aSimpleExample.m to get a rough model. the trainning samples for aSimpleExample.m script can be downloaded from https://pan.baidu.com/s/1NY3ZPkq9sOZzxJlWDKN7dQ ( password: r5dl ).
+6. run aSimpleExample.m to get a rough model. the trainning samples for aSimpleExample.m script can be downloaded from https://pan.baidu.com/s/1y4Wt_OJGodA3G4iQujQnJg ( password: 1d49 ).
 
 enjoy yourself.  :)
